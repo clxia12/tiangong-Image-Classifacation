@@ -1,0 +1,170 @@
+#encoding:utf-8
+import numpy as np
+import sys
+import os
+import cv2
+import caffe
+import csv
+caffe_root = '/home/clxia/caffe-master/'
+sys.path.insert(0, caffe_root + 'python')
+
+# net_file = '/home/clxia/caffe-master/models/SeNet/SE-ResNeXt-101_test.prototxt'
+# caffe_model = '/home/clxia/caffe-master/models/SeNet/2055/solver_iter_60000_988.caffemodel'
+# mean_file = '/home/clxia/caffe-master/data/tianyi/imagenet_mean.binaryproto'
+# print('Params loaded!')
+# caffe.set_mode_gpu()
+# net = caffe.Net(net_file,
+#                 caffe_model,
+#                 caffe.TEST)
+
+net_file = '/home/clxia/caffe-master/models/SeNet/SE-ResNeXt-101_test.prototxt'
+caffe_model = '/home/clxia/caffe-master/models/SeNet/solver_iter_60000.caffemodel'
+mean_file = '/home/clxia/caffe-master/data/tianyi/imagenet_mean.binaryproto'
+print('Params loaded!')
+net = caffe.Net(net_file,
+                caffe_model,
+                caffe.TEST)
+
+mean_blob = caffe.proto.caffe_pb2.BlobProto()
+mean_blob.ParseFromString(open(mean_file, 'rb').read())
+mean_npy = caffe.io.blobproto_to_array(mean_blob)
+a = mean_npy[0, :, 0, 0]
+print(net.blobs['data'].data.shape)
+transformer = caffe.io.Transformer({'data': net.blobs['data'].data.shape})
+transformer.set_transpose('data', (2, 0, 1))
+transformer.set_mean('data', a)
+transformer.set_raw_scale('data', 255.0)
+transformer.set_channel_swap('data', (2, 1, 0))
+
+test_image_path='/home/clxia/caffe-master/data/test'
+image_names=os.listdir(test_image_path)
+image_names.sort()
+
+ft=open('/home/clxia/caffe-master/data/res.txt','w')
+# 写入csv文件，设置newline，否则两行之间会空一行
+csvfile=open('/home/clxia/caffe-master/data/res-51.csv','w') 
+#delimiter默认是逗号
+writer=csv.writer(csvfile,delimiter='，')
+
+names = ['DESERT', 'OCEAN', 'MOUNTAIN', 'FARMLAND', 'LAKE', 'CITY']
+for image in image_names:
+    img_path='/home/clxia/caffe-master/data/test/'+image
+    im = caffe.io.load_image(img_path)
+
+    # size(256,256)
+    net.blobs['data'].data[...] = transformer.preprocess('data', im)
+    predict = net.forward()
+    prob = net.blobs['prob'].data[0].flatten()
+    image_label=names[np.argmax(prob)]
+    ft.write(image+','+image_label+'\n')
+    writer.writerow([image,image_label])
+
+
+    # size=(384,384)
+    # i=cv2.resize(im, size, interpolation=cv2.INTER_LINEAR)
+    # img=cv2.resize(im, (320,320), interpolation=cv2.INTER_LINEAR)
+    # img_leftup =i[0:320,0:320]
+    # img_rightup=i[0:320,64:384]
+    # img_leftdown=i[64:384,0:320]
+    # img_rightdowm=i[64:384,64:384]
+
+    # size=(336,336)
+    # i=cv2.resize(im, (384,384), interpolation=cv2.INTER_LINEAR)
+    # img=cv2.resize(im, (336,336), interpolation=cv2.INTER_LINEAR)
+    # img_leftup =i[0:336,0:336]
+    # img_rightup=i[0:336,48:384]
+    # img_leftdown=i[48:384,0:336]
+    # img_rightdowm=i[48:384,48:384]
+
+    # size = (224, 224)
+    # img = cv2.resize(im, size, interpolation=cv2.INTER_LINEAR)
+    # img_leftup =im[0:224,0:224]
+    # img_rightup=im[0:224,32:256]
+    # img_leftdown=im[32:256,0:224]
+    # img_rightdowm=im[32:256,32:256]
+    # L=[]
+
+    # img_list=[img,img_leftdown,img_leftup,img_rightdowm,img_rightup]
+    # for imgdata in img_list:
+    #     net.blobs['data'].data[...] = transformer.preprocess('data', imgdata)
+    #     predict = net.forward()
+    #     prob = net.blobs['prob'].data[0].flatten()
+    #     L.append(np.argmax(prob))
+
+        # net_senet.blobs['data'].data[...] = transformer.preprocess('data', imgdata)
+        # predict = net_senet.forward()
+        # prob = net_senet.blobs['prob'].data[0].flatten()
+        # L.append(np.argmax(prob))
+
+
+
+    # net.blobs['data'].data[...] = transformer.preprocess('data', img)
+    # predict = net.forward()
+    # prob = net.blobs['prob'].data[0].flatten()
+    # L.append(np.argmax(prob))
+
+    # net.blobs['data'].data[...] = transformer.preprocess('data', img_leftup)
+    # predict = net.forward()
+    # prob = net.blobs['prob'].data[0].flatten()
+    # L.append(np.argmax(prob))
+
+    # net.blobs['data'].data[...] = transformer.preprocess('data', img_rightup)
+    # predict = net.forward()
+    # prob = net.blobs['prob'].data[0].flatten()
+    # L.append(np.argmax(prob))
+
+    # net.blobs['data'].data[...] = transformer.preprocess('data', img_leftdown)
+    # predict = net.forward()
+    # prob = net.blobs['prob'].data[0].flatten()
+    # L.append(np.argmax(prob))
+
+    # net.blobs['data'].data[...] = transformer.preprocess('data', img_rightdowm)
+    # predict = net.forward()
+    # prob = net.blobs['prob'].data[0].flatten()
+    # L.append(np.argmax(prob))
+
+    # L_list_sort=sorted(L)
+
+    # if L_list_sort[0] != L_list_sort[2]:
+    #     print(image,'prop',L)
+    #     img=cv2.imread(img_path)
+    #     cv2.imwrite('/home/clxia/caffe-master/data/error/'+image,img)
+
+    # print('prob',sorted(L)[2])
+    
+    # print('prob: ', prob)
+    # print('class: ', names[np.argmax(prob)])
+
+    # ft.write(image+','+names[L_list_sort[2]]+'\n')
+    # image_label=names[np.argmax(prob)]
+    # # image_label=names[sorted(L)[2]]
+    # img=cv2.imread(img_path)
+    # cv2.imwrite('/media/clxia/FA5A7ADC63CE92E0/tainyi/'+image_label+'/'+image,img)
+    # cv2.imwrite('/home/clxia/caffe-master/data/error/'+image,img)
+
+   
+
+ft.close()
+csvfile.close()
+
+# test_img = '/home/clxia/caffe-master/data/test/MWI_kbTEjOqrAKksH9Uj.jpg'
+# im = caffe.io.load_image(test_img)
+# size=(224,224)
+# img=cv2.resize(im,size,interpolation=cv2.INTER_LINEAR)
+# net.blobs['data'].data[...] = transformer.preprocess('data', img)
+# predict = net.forward()
+# names=['DESERT','OCEAN','MOUNTAIN','FARMLAND','LAKE','CITY']
+# prob = net.blobs['prob'].data[0].flatten()
+# print('prob: ', prob)
+# print('class: ', names[np.argmax(prob)])
+# names = []
+# with open('/home/clxia/caffe-master/examples/tianyi/label.txt', 'r+') as f:
+#     for l in f.readlines():
+#         names.append(l.split(' ')[1].strip())
+#         print(names)
+#         prob = net.blobs['prob'].data[0].flatten()
+#         print('prob: ', prob)
+#         print('class: ', names[np.argmax(prob)])
+        # img = cv2.imread(test_img)
+        # cv2.imshow('Image', img)
+        # cv2.waitKey(0)

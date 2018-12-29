@@ -1,0 +1,15 @@
+solver_iter_60000_ialt_MWI_mean_label4.caffemodel　灰度图和微波图一起训练得到的。采用原始均值文件
+solver_iter_60000_ialt_MWI_mean_label3.caffemodel
+solver_iter_60000_ialt_MWI_mean_label2.caffemodel 测试集均值文件：ialt_MWI_imagenet_mean.binaryproto
+solver_iter_ialt_label2.caffemodel 预训练集Ａ榜训练的模型，测试微波图的。
+solver_iter_ialt_label3.caffemodel
+solver_iter_ialt_label4.caffemodel　　测试集均值文件：imagenet_mean.binaryproto
+
+
+
+
+
+所有的训练权只都为imagenet_mean.binaryproto
+
+
+
